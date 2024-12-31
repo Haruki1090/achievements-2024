@@ -1,62 +1,29 @@
-"use client"
-import React, { useState, useEffect } from "react"
-import Image from "next/image"
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+"use client";
+import React, { useEffect, useRef } from "react";
+import Image from "next/image";
+import { marked } from "marked";
 import {
   Trophy,
   Briefcase,
   Rocket,
   Calendar,
   Award,
-  ArrowDownCircle,
-  ArrowUpCircle,
   ExternalLink,
   Youtube,
   Twitter,
   Github,
-} from "lucide-react"
+} from "lucide-react";
 
 /* ----------------------------------
- * 1. シンプルな Button
- * ---------------------------------- */
-function Button({
-  children,
-  onClick,
-  className = "",
-  variant = "default",
-}: {
-  children: React.ReactNode
-  onClick?: () => void
-  className?: string
-  variant?: "default" | "outline"
-}) {
-  const baseStyle = `inline-flex items-center justify-center px-4 py-2 
-    rounded shadow-md font-semibold transition-colors`
-  let variantStyle = ""
-  if (variant === "default") {
-    variantStyle = `bg-blue-600 text-white hover:bg-blue-700`
-  } else if (variant === "outline") {
-    variantStyle = `border border-gray-300 bg-white text-gray-700 hover:bg-gray-50`
-  }
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseStyle} ${variantStyle} ${className}`}
-    >
-      {children}
-    </button>
-  )
-}
-
-/* ----------------------------------
- * 2. シンプルな Card
+ * 1. シンプルな Card
  * ---------------------------------- */
 function Card({
   children,
   className = "",
 }: {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div
@@ -65,18 +32,70 @@ function Card({
     >
       {children}
     </div>
-  )
+  );
 }
 
 function CardHeader({ children }: { children: React.ReactNode }) {
-  return <div className="mb-2">{children}</div>
+  return <div className="mb-2">{children}</div>;
 }
-function CardTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-lg font-bold tracking-wide text-gray-800">{children}</h2>
-}
+
 function CardContent({ children }: { children: React.ReactNode }) {
-  return <div className="text-sm text-gray-700">{children}</div>
+  return <div className="text-sm text-gray-700">{children}</div>;
 }
+
+/* ----------------------------------
+ * 2. 埋め込みコンポーネント
+ * ---------------------------------- */
+function YouTubeEmbed({ videoId }: { videoId: string }) {
+  return (
+    <div className="relative w-full pt-[56.25%]">
+      <iframe
+        className="absolute top-0 left-0 w-full h-full"
+        src={`https://www.youtube.com/embed/${videoId}`}
+        title="YouTube video player"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  );
+}
+
+function XEmbed({ tweetUrl }: { tweetUrl: string }) {
+  const tweetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // @ts-ignore
+    if (window.twttr) {
+      // @ts-ignore
+      window.twttr.widgets.load(tweetRef.current);
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://platform.twitter.com/widgets.js";
+      script.async = true;
+      script.onload = () => {
+        // @ts-ignore
+        window.twttr.widgets.load(tweetRef.current);
+      };
+      document.body.appendChild(script);
+    }
+
+    return () => {
+      const existingScript = document.querySelector('script[src="https://platform.twitter.com/widgets.js"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, [tweetUrl]);
+
+  return (
+    <div ref={tweetRef} className="max-w-xl">
+      <blockquote className="twitter-tweet" data-theme="light">
+        <a href={tweetUrl}>Loading tweet...</a>
+      </blockquote>
+    </div>
+  );
+}
+
 
 /* ----------------------------------
  * 3. リンク用アイコンを返す関数
@@ -84,47 +103,70 @@ function CardContent({ children }: { children: React.ReactNode }) {
 function getLinkIcon(type: string) {
   switch (type) {
     case "youtube":
-      return <Youtube className="w-4 h-4" />
+      return <Youtube className="w-4 h-4" />;
     case "x":
     case "twitter":
-      return <Twitter className="w-4 h-4" />
+      return <Twitter className="w-4 h-4" />;
     case "github":
-      return <Github className="w-4 h-4" />
+      return <Github className="w-4 h-4" />;
     default:
-      return <ExternalLink className="w-4 h-4" />
+      return <ExternalLink className="w-4 h-4" />;
   }
 }
 
 /* ----------------------------------
- * 4. 実績の型
+ * 4. 実績アイコン
+ * ---------------------------------- */
+function getIcon(text: string) {
+  if (
+    text.includes("ハッカソン") ||
+    text.includes("優勝") ||
+    text.includes("入賞")
+  ) {
+    return <Trophy className="w-4 h-4 mr-1 text-yellow-500" />;
+  } else if (text.includes("インターン")) {
+    return <Briefcase className="w-4 h-4 mr-1 text-blue-500" />;
+  } else if (text.includes("リリース")) {
+    return <Rocket className="w-4 h-4 mr-1 text-green-500" />;
+  } else {
+    return <Calendar className="w-4 h-4 mr-1 text-gray-500" />;
+  }
+}
+
+/* ----------------------------------
+ * 5. 型定義
  * ---------------------------------- */
 type LinkItem = {
-  label: string
-  url: string
-  type?: "x" | "youtube" | "github" | "note" | "site" | "article"
-}
+  label: string;
+  url: string;
+  type?: "x" | "youtube" | "github" | "note" | "site" | "article";
+  embedId?: string;
+  embedUrl?: string;
+};
 
 type Achievement = {
-  month: string
-  achievements: string[]
+  month: string;
+  achievements: string[];
   media?: {
-    type: "image"
-    url: string
-    alt: string
-  }
-  links?: LinkItem[]
-}
+    type: "image" | "youtube" | "x";
+    url?: string;
+    alt?: string;
+    youtubeVideoId?: string;
+    tweetUrl?: string;
+  };
+  links?: LinkItem[];
+};
 
 /* ----------------------------------
- * 5. 実績データ
+ * 6. 実績データ
  * ---------------------------------- */
 const achievementsData: Achievement[] = [
   {
-    month: "January",
+    month: "1月", // January → 1月
     achievements: ["・獣医学ノート事業化"],
     media: {
       type: "image",
-      url: "/logo.jpg", // publicに小さめのロゴを用意
+      url: "/logo.jpg",
       alt: "Jyuuigakunote Logo",
     },
     links: [
@@ -136,20 +178,14 @@ const achievementsData: Achievement[] = [
     ],
   },
   {
-    month: "February",
+    month: "2月", // February → 2月
     achievements: ["・株式会社アンドエーアイ（&AI）にインターン生として加入"],
   },
   {
-    month: "March",
+    month: "3月", // March → 3月
     achievements: [
       "・青山学院大学150周年企画 青学TV 田中みなみ様との対談トークに出演",
     ],
-    // YouTubeサムネ用の例：実際には本動画のサムネ画像URLに差し替えてください
-    media: {
-      type: "image",
-      url: "/thumbnail.jpg",
-      alt: "青学TVサムネイル",
-    },
     links: [
       {
         label: "YouTubeで見る",
@@ -159,11 +195,11 @@ const achievementsData: Achievement[] = [
     ],
   },
   {
-    month: "May",
+    month: "5月", // May → 5月
     achievements: ["・ワンキャリアエンジニアインターン参加"],
   },
   {
-    month: "July",
+    month: "7月", // July → 7月
     achievements: ["・Benesse Flutter ハッカソン **準優勝**"],
     links: [
       {
@@ -174,7 +210,7 @@ const achievementsData: Achievement[] = [
     ],
   },
   {
-    month: "August",
+    month: "8月", // August → 8月
     achievements: [
       "・楽天エンジニアインターン参加",
       "・日立製作所インターン（営業）**優勝**",
@@ -196,7 +232,7 @@ const achievementsData: Achievement[] = [
     ],
   },
   {
-    month: "September",
+    month: "9月", // September → 9月
     achievements: [
       "・ゴールドマンサックスワークショップ参加",
       "・Amazon Web Service インターンシップ参加",
@@ -216,11 +252,11 @@ const achievementsData: Achievement[] = [
     ],
   },
   {
-    month: "October",
+    month: "10月", // October → 10月
     achievements: ["・Kaigi on Rails スカラシップ参加"],
   },
   {
-    month: "November",
+    month: "11月", // November → 11月
     achievements: [
       "・**Make with Notion Japan community event登壇**",
       "・**satto ハッカソン** **入賞**",
@@ -245,7 +281,7 @@ const achievementsData: Achievement[] = [
     ],
   },
   {
-    month: "December",
+    month: "12月", // December → 12月
     achievements: [
       "・社会人向けNotion講座開催",
       "・NotionAPI講座開催",
@@ -280,22 +316,7 @@ const achievementsData: Achievement[] = [
       },
     ],
   },
-]
-
-/* ----------------------------------
- * 6. 実績アイコン
- * ---------------------------------- */
-function getIcon(text: string) {
-  if (text.includes("ハッカソン") || text.includes("優勝") || text.includes("入賞")) {
-    return <Trophy className="w-4 h-4 mr-1 text-yellow-500" />
-  } else if (text.includes("インターン")) {
-    return <Briefcase className="w-4 h-4 mr-1 text-blue-500" />
-  } else if (text.includes("リリース")) {
-    return <Rocket className="w-4 h-4 mr-1 text-green-500" />
-  } else {
-    return <Calendar className="w-4 h-4 mr-1 text-gray-500" />
-  }
-}
+];
 
 /* ----------------------------------
  * 7. 実績統計（Stats）
@@ -304,19 +325,19 @@ function Stats({ achievements }: { achievements: Achievement[] }) {
   const totalItems = achievements.reduce(
     (acc, curr) => acc + curr.achievements.length,
     0
-  )
+  );
   const totalReleases = achievements.reduce(
     (acc, curr) =>
       acc + curr.achievements.filter((a) => a.includes("リリース")).length,
     0
-  )
+  );
   const totalWins = achievements.reduce(
     (acc, curr) =>
       acc +
       curr.achievements.filter((a) => a.includes("優勝") || a.includes("入賞"))
         .length,
     0
-  )
+  );
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-8">
@@ -348,130 +369,101 @@ function Stats({ achievements }: { achievements: Achievement[] }) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 /* ----------------------------------
- * 8. ページ本体
+ * 8. メインの実績表示コンポーネント
  * ---------------------------------- */
-export default function AchievementsPage() {
-  const [showTopButton, setShowTopButton] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 400) setShowTopButton(true)
-      else setShowTopButton(false)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const scrollToAchievements = () => {
-    const el = document.getElementById("achievements-body")
-    if (el) el.scrollIntoView({ behavior: "smooth" })
-  }
-
+export default function Achievements() {
   return (
-    <main className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white relative">
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center h-[60vh] bg-gradient-to-r from-blue-400 to-indigo-500 text-white">
-        <div className="text-center">
-          <h1 className="text-5xl font-extrabold drop-shadow-md mb-4">
-            2024 Achievements
-          </h1>
-          <p className="text-lg mb-8 drop-shadow-sm">
-            A journey through the year&apos;s accomplishments
-          </p>
-        </div>
-        <Button
-          onClick={scrollToAchievements}
-          className="bg-white text-blue-600 hover:text-blue-800 font-bold"
-        >
-          <ArrowDownCircle className="w-5 h-5 mr-2" />
-          View Achievements
-        </Button>
-      </section>
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-8">2024年の実績</h1>
 
-      {/* Body */}
-      <section
-        id="achievements-body"
-        className="container mx-auto px-4 py-8 flex-1"
-      >
-        {/* Stats */}
-        <Stats achievements={achievementsData} />
+      {/* 統計情報の表示 */}
+      <Stats achievements={achievementsData} />
 
-        {/* Achievements List (no scroll) */}
-        {achievementsData.map((ach, idx) => (
-          <Card key={idx}>
-            <CardHeader>
-              <CardTitle>{ach.month}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* 画像がある場合は表示 */}
-              {ach.media && ach.media.type === "image" && (
-                <div className="mb-3">
-                  <Image
-                    src={ach.media.url}
-                    alt={ach.media.alt}
-                    width={180}   // 小さめに
-                    height={120}
-                    className="rounded border object-contain"
+      {/* 月ごとの実績リスト */}
+      <div className="space-y-8">
+        {achievementsData.map((monthData, index) => (
+          <div key={index} className="border rounded-lg p-6 bg-white shadow-sm">
+            {/* 月表示 */}
+            <h2 className="text-xl font-semibold mb-4">{monthData.month}</h2>
+
+            {/* 実績リスト */}
+            <div className="space-y-2 mb-4">
+              {monthData.achievements.map((achievement, i) => (
+                <div key={i} className="flex items-start">
+                  {getIcon(achievement)}
+                  <div
+                    className="prose prose-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: marked(achievement, { breaks: true }),
+                    }}
                   />
                 </div>
-              )}
+              ))}
+            </div>
 
-              {/* 実績リスト */}
-              <ul className="space-y-2 mb-4">
-                {ach.achievements.map((item, i) => (
-                  <li key={i} className="flex items-start">
-                    {getIcon(item)}
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: item.replace(
-                          /\*\*(.*?)\*\*/g,
-                          '<strong class="text-blue-600 font-bold">$1</strong>'
-                        ),
-                      }}
-                    />
-                  </li>
-                ))}
-              </ul>
+            {/* メディア表示 */}
+            {monthData.media && (
+              <div className="my-4">
+                {monthData.media.type === "image" && monthData.media.url && (
+                  <Image
+                    src={monthData.media.url}
+                    alt={monthData.media.alt || ""}
+                    width={400}
+                    height={300}
+                    className="rounded-lg"
+                  />
+                )}
+                {monthData.media.type === "youtube" &&
+                  monthData.media.youtubeVideoId && (
+                    <YouTubeEmbed videoId={monthData.media.youtubeVideoId} />
+                  )}
+                {monthData.media.type === "x" && monthData.media.tweetUrl && (
+                  <XEmbed tweetUrl={monthData.media.tweetUrl} />
+                )}
+              </div>
+            )}
 
-              {/* リンクリスト */}
-              {ach.links && ach.links.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {ach.links.map((link, i) => (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      onClick={() => window.open(link.url, "_blank")}
-                      className="gap-1 text-sm"
+            {/* リンク表示 */}
+            {monthData.links && monthData.links.length > 0 && (
+              <div className="mt-4 space-y-4">
+                {monthData.links.map((link, i) => (
+                  <div key={i}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mb-2"
                     >
-                      {getLinkIcon(link.type || "site")}
-                      <span>{link.label}</span>
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+                      {getLinkIcon(link.type || "default")}
+                      {link.label}
+                    </a>
 
-      {/* ページ上部へ戻るボタン */}
-      {showTopButton && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-4 right-4 p-3 bg-blue-600 text-white rounded-full 
-          shadow-lg hover:bg-blue-700 transition-colors"
-        >
-          <ArrowUpCircle className="w-6 h-6" />
-        </button>
-      )}
-    </main>
-  )
+                    {/* YouTube埋め込み */}
+                    {link.type === "youtube" && link.url && (
+                      <div className="mt-2">
+                        <YouTubeEmbed
+                          videoId={link.url.split("v=")[1]?.split("&")[0] || ""}
+                        />
+                      </div>
+                    )}
+
+                    {/* X/Twitter埋め込み */}
+                    {link.type === "x" && link.url && (
+                      <div className="mt-2">
+                        <XEmbed tweetUrl={link.url} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
