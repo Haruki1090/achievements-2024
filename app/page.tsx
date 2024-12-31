@@ -9,35 +9,48 @@ import {
   Award,
   ArrowDownCircle,
   ArrowUpCircle,
+  ExternalLink,
+  Youtube,
+  Twitter,
+  Github,
 } from "lucide-react"
 
-// =============================
-// 1. シンプルなButton
-// =============================
+/* ----------------------------------
+ * 1. シンプルな Button
+ * ---------------------------------- */
 function Button({
   children,
   onClick,
   className = "",
+  variant = "default",
 }: {
   children: React.ReactNode
   onClick?: () => void
   className?: string
+  variant?: "default" | "outline"
 }) {
+  const baseStyle = `inline-flex items-center justify-center px-4 py-2 
+    rounded shadow-md font-semibold transition-colors`
+  let variantStyle = ""
+  if (variant === "default") {
+    variantStyle = `bg-blue-600 text-white hover:bg-blue-700`
+  } else if (variant === "outline") {
+    variantStyle = `border border-gray-300 bg-white text-gray-700 hover:bg-gray-50`
+  }
+
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center justify-center px-4 py-2 bg-blue-600 
-        text-white font-semibold rounded shadow-md hover:bg-blue-700 
-        transition-colors ${className}`}
+      className={`${baseStyle} ${variantStyle} ${className}`}
     >
       {children}
     </button>
   )
 }
 
-// =============================
-// 2. シンプルなCard
-// =============================
+/* ----------------------------------
+ * 2. シンプルな Card
+ * ---------------------------------- */
 function Card({
   children,
   className = "",
@@ -48,49 +61,49 @@ function Card({
   return (
     <div
       className={`bg-white/80 backdrop-blur-sm border border-gray-200 
-        rounded-lg shadow-sm p-4 ${className}`}
+        rounded-lg shadow-sm p-4 mb-4 hover:shadow-md transition-shadow ${className}`}
     >
       {children}
     </div>
   )
 }
 
-// Card内の見出し・本文を分ける場合
 function CardHeader({ children }: { children: React.ReactNode }) {
   return <div className="mb-2">{children}</div>
 }
-
 function CardTitle({ children }: { children: React.ReactNode }) {
   return <h2 className="text-lg font-bold tracking-wide text-gray-800">{children}</h2>
 }
-
 function CardContent({ children }: { children: React.ReactNode }) {
   return <div className="text-sm text-gray-700">{children}</div>
 }
 
-// =============================
-// 3. シンプルなScrollArea
-// =============================
-function ScrollArea({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <div
-      className={`overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 
-        scrollbar-track-gray-100 rounded ${className}`}
-    >
-      {children}
-    </div>
-  )
+/* ----------------------------------
+ * 3. リンク用アイコンを返す関数
+ * ---------------------------------- */
+function getLinkIcon(type: string) {
+  switch (type) {
+    case "youtube":
+      return <Youtube className="w-4 h-4" />
+    case "x":
+    case "twitter":
+      return <Twitter className="w-4 h-4" />
+    case "github":
+      return <Github className="w-4 h-4" />
+    default:
+      return <ExternalLink className="w-4 h-4" />
+  }
 }
 
-// =============================
-// 4. 実績データの型定義
-// =============================
+/* ----------------------------------
+ * 4. 実績の型
+ * ---------------------------------- */
+type LinkItem = {
+  label: string
+  url: string
+  type?: "x" | "youtube" | "github" | "note" | "site" | "article"
+}
+
 type Achievement = {
   month: string
   achievements: string[]
@@ -99,20 +112,28 @@ type Achievement = {
     url: string
     alt: string
   }
+  links?: LinkItem[]
 }
 
-// =============================
-// 5. 実績データ（全て反映）
-// =============================
+/* ----------------------------------
+ * 5. 実績データ
+ * ---------------------------------- */
 const achievementsData: Achievement[] = [
   {
     month: "January",
     achievements: ["・獣医学ノート事業化"],
     media: {
       type: "image",
-      url: "/logo.jpg",  // サンプル画像。public/配下にlogo.jpgが必要
-      alt: "logo",
+      url: "/logo.jpg", // publicに小さめのロゴを用意
+      alt: "Jyuuigakunote Logo",
     },
+    links: [
+      {
+        label: "公式サイトはこちら",
+        url: "https://www.jyuuigakunote.com/",
+        type: "site",
+      },
+    ],
   },
   {
     month: "February",
@@ -123,6 +144,19 @@ const achievementsData: Achievement[] = [
     achievements: [
       "・青山学院大学150周年企画 青学TV 田中みなみ様との対談トークに出演",
     ],
+    // YouTubeサムネ用の例：実際には本動画のサムネ画像URLに差し替えてください
+    media: {
+      type: "image",
+      url: "/thumbnail.jpg",
+      alt: "青学TVサムネイル",
+    },
+    links: [
+      {
+        label: "YouTubeで見る",
+        url: "https://youtu.be/Z_RwdZDQXRE?si=ux-Wxh0Jpc04biiD",
+        type: "youtube",
+      },
+    ],
   },
   {
     month: "May",
@@ -131,6 +165,13 @@ const achievementsData: Achievement[] = [
   {
     month: "July",
     achievements: ["・Benesse Flutter ハッカソン **準優勝**"],
+    links: [
+      {
+        label: "GitHubソースコード",
+        url: "https://github.com/Haruki1090/benesse_hackathon_2024_08",
+        type: "github",
+      },
+    ],
   },
   {
     month: "August",
@@ -141,6 +182,18 @@ const achievementsData: Achievement[] = [
       "・獣医学ノートのECサイトをリリース",
       "・**Notion公式キャンパスリーダーに就任**",
     ],
+    links: [
+      {
+        label: "ECサイトURL",
+        url: "https://www.jyuuigakunote.com/",
+        type: "site",
+      },
+      {
+        label: "Xポスト",
+        url: "https://x.com/Haruki_dev/status/1829433874759426085",
+        type: "x",
+      },
+    ],
   },
   {
     month: "September",
@@ -148,6 +201,18 @@ const achievementsData: Achievement[] = [
       "・ゴールドマンサックスワークショップ参加",
       "・Amazon Web Service インターンシップ参加",
       "・**Mercari AI / LLM hackathon** **優勝**",
+    ],
+    links: [
+      {
+        label: "Xポスト",
+        url: "https://x.com/Haruki_dev/status/1839676238295687229",
+        type: "x",
+      },
+      {
+        label: "開催レポート",
+        url: "https://careers.mercari.com/mercan/articles/46255/",
+        type: "article",
+      },
     ],
   },
   {
@@ -161,6 +226,23 @@ const achievementsData: Achievement[] = [
       "・**satto ハッカソン** **入賞**",
       "・IDEA FLASH Session AI **優秀賞**",
     ],
+    links: [
+      {
+        label: "Xポスト (登壇)",
+        url: "https://x.com/Haruki_dev/status/1855149432343515639",
+        type: "x",
+      },
+      {
+        label: "YouTube (発表)",
+        url: "https://www.youtube.com/live/LtveFk3s5IY?si=G7NPcs52-R7u_BCu&t=1605",
+        type: "youtube",
+      },
+      {
+        label: "Xポスト (優秀賞)",
+        url: "https://x.com/Haruki_dev/status/1862784662093107256",
+        type: "x",
+      },
+    ],
   },
   {
     month: "December",
@@ -170,12 +252,39 @@ const achievementsData: Achievement[] = [
       "・**株式会社Integritionに参画**",
       "・**SoftBank satto ハッカソン** **優勝**",
     ],
+    links: [
+      {
+        label: "Xポスト (社会人向けNotion講座)",
+        url: "https://x.com/Haruki_dev/status/1865897284728393834",
+        type: "x",
+      },
+      {
+        label: "Xポスト (NotionAPI講座)",
+        url: "https://x.com/Haruki_dev/status/1860995357326610875",
+        type: "x",
+      },
+      {
+        label: "Xポスト (Integrition参画)",
+        url: "https://x.com/Haruki_dev/status/1867056775649956246",
+        type: "x",
+      },
+      {
+        label: "Xポスト (SoftBank satto 優勝)",
+        url: "https://x.com/Haruki_dev/status/1865616870994489852",
+        type: "x",
+      },
+      {
+        label: "note 記事",
+        url: "https://note.com/haruki___bz/n/n5f7410bdefdb?sub_rt=share_pw",
+        type: "note",
+      },
+    ],
   },
 ]
 
-// =============================
-// 6. アイコン判定
-// =============================
+/* ----------------------------------
+ * 6. 実績アイコン
+ * ---------------------------------- */
 function getIcon(text: string) {
   if (text.includes("ハッカソン") || text.includes("優勝") || text.includes("入賞")) {
     return <Trophy className="w-4 h-4 mr-1 text-yellow-500" />
@@ -188,63 +297,63 @@ function getIcon(text: string) {
   }
 }
 
-// =============================
-// 7. 統計（合計数など）
-// =============================
+/* ----------------------------------
+ * 7. 実績統計（Stats）
+ * ---------------------------------- */
 function Stats({ achievements }: { achievements: Achievement[] }) {
-  const totalItems = achievements.reduce((acc, curr) => acc + curr.achievements.length, 0)
+  const totalItems = achievements.reduce(
+    (acc, curr) => acc + curr.achievements.length,
+    0
+  )
   const totalReleases = achievements.reduce(
     (acc, curr) =>
       acc + curr.achievements.filter((a) => a.includes("リリース")).length,
     0
   )
-  const totalHackathonWins = achievements.reduce(
+  const totalWins = achievements.reduce(
     (acc, curr) =>
-      acc + curr.achievements.filter((a) => a.includes("優勝") || a.includes("入賞")).length,
+      acc +
+      curr.achievements.filter((a) => a.includes("優勝") || a.includes("入賞"))
+        .length,
     0
   )
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-8">
-      {/* カード1: Total Achievements */}
       <Card className="text-center">
         <CardHeader>
           <Award className="w-6 h-6 mx-auto text-pink-500" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalItems}</p>
-          <p className="text-gray-500 text-sm">Total Achievements</p>
+          <p className="text-gray-600 text-sm">Total Achievements</p>
         </CardContent>
       </Card>
-
-      {/* カード2: Releases */}
       <Card className="text-center">
         <CardHeader>
           <Rocket className="w-6 h-6 mx-auto text-green-500" />
         </CardHeader>
         <CardContent>
           <p className="text-2xl font-bold">{totalReleases}</p>
-          <p className="text-gray-500 text-sm">Releases</p>
+          <p className="text-gray-600 text-sm">Releases</p>
         </CardContent>
       </Card>
-
-      {/* カード3: Hackathon Wins */}
       <Card className="text-center">
         <CardHeader>
           <Trophy className="w-6 h-6 mx-auto text-yellow-500" />
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">{totalHackathonWins}</p>
-          <p className="text-gray-500 text-sm">Hackathon Wins</p>
+          <p className="text-2xl font-bold">{totalWins}</p>
+          <p className="text-gray-600 text-sm">Wins</p>
         </CardContent>
       </Card>
     </div>
   )
 }
 
-// =============================
-// 8. ページ本体
-// =============================
+/* ----------------------------------
+ * 8. ページ本体
+ * ---------------------------------- */
 export default function AchievementsPage() {
   const [showTopButton, setShowTopButton] = useState(false)
 
@@ -268,7 +377,7 @@ export default function AchievementsPage() {
 
   return (
     <main className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white relative">
-      {/* ヒーローセクション */}
+      {/* Hero Section */}
       <section className="relative flex flex-col items-center justify-center h-[60vh] bg-gradient-to-r from-blue-400 to-indigo-500 text-white">
         <div className="text-center">
           <h1 className="text-5xl font-extrabold drop-shadow-md mb-4">
@@ -287,55 +396,70 @@ export default function AchievementsPage() {
         </Button>
       </section>
 
-      {/* Achievements Body */}
+      {/* Body */}
       <section
         id="achievements-body"
         className="container mx-auto px-4 py-8 flex-1"
       >
-        {/* Stats (統計表示) */}
+        {/* Stats */}
         <Stats achievements={achievementsData} />
 
-        {/* スクロール可能な実績リスト */}
-        <ScrollArea className="max-h-[60vh] border rounded-lg p-4 shadow-inner">
-          {achievementsData.map((ach, idx) => (
-            <Card key={idx} className="mb-4 hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle>{ach.month}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* 画像がある場合のみ */}
-                {ach.media && ach.media.type === "image" && (
-                  <div className="mb-3">
-                    <Image
-                      src={ach.media.url}
-                      alt={ach.media.alt}
-                      width={400}
-                      height={200}
-                      className="rounded border object-cover"
-                    />
-                  </div>
-                )}
+        {/* Achievements List (no scroll) */}
+        {achievementsData.map((ach, idx) => (
+          <Card key={idx}>
+            <CardHeader>
+              <CardTitle>{ach.month}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* 画像がある場合は表示 */}
+              {ach.media && ach.media.type === "image" && (
+                <div className="mb-3">
+                  <Image
+                    src={ach.media.url}
+                    alt={ach.media.alt}
+                    width={180}   // 小さめに
+                    height={120}
+                    className="rounded border object-contain"
+                  />
+                </div>
+              )}
 
-                <ul className="space-y-2">
-                  {ach.achievements.map((item, i) => (
-                    <li key={i} className="flex items-start">
-                      {getIcon(item)}
-                      <span
-                        // '**テキスト**' を <strong> に置き換えて強調表示
-                        dangerouslySetInnerHTML={{
-                          __html: item.replace(
-                            /\*\*(.*?)\*\*/g,
-                            '<strong class="text-blue-600 font-bold">$1</strong>'
-                          ),
-                        }}
-                      />
-                    </li>
+              {/* 実績リスト */}
+              <ul className="space-y-2 mb-4">
+                {ach.achievements.map((item, i) => (
+                  <li key={i} className="flex items-start">
+                    {getIcon(item)}
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: item.replace(
+                          /\*\*(.*?)\*\*/g,
+                          '<strong class="text-blue-600 font-bold">$1</strong>'
+                        ),
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+
+              {/* リンクリスト */}
+              {ach.links && ach.links.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {ach.links.map((link, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      onClick={() => window.open(link.url, "_blank")}
+                      className="gap-1 text-sm"
+                    >
+                      {getLinkIcon(link.type || "site")}
+                      <span>{link.label}</span>
+                    </Button>
                   ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </ScrollArea>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </section>
 
       {/* ページ上部へ戻るボタン */}
